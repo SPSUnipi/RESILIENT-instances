@@ -1,3 +1,6 @@
 [submodule "cases-pypsa-eur/pypsa-eur-instances"]
 	path = cases-pypsa-eur/pypsa-eur-instances
 	url = https://github.com/SPSUnipi/pypsa-eur-instances
+[submodule "cases-plan4res/pypsa-eur-instances"]
+	path = cases-plan4res/pypsa-eur-instances
+	url = https://github.com/SPSUnipi/pypsa-eur-instances
