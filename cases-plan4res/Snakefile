@@ -1,0 +1,98 @@
+# The stochastic instances of the generator of plan4res/resilient: a network
+# of the European power system in 2030 for each case of config["cases"],
+# solved by each solver of config["solvers"] with PyPSA or with SMS++ through
+# pypsa2smspp. The results, the benchmarks of Snakemake and the logs have the
+# names and the format of those of pypsa-eur-instances, so that the same
+# scripts read both.
+#
+#   snakemake -c 32 solve_all
+#   snakemake -c 1 collect_benchmarks
+
+
+configfile: "config.yaml"
+
+
+CASES = config["cases"]
+SOLVERS = config["solvers"]
+
+
+# a case may have underscores in its name, a solver may not
+wildcard_constraints:
+    case="[A-Za-z0-9_]+",
+    solver="[A-Za-z0-9-]+",
+
+
+localrules:
+    solve_all,
+    collect_benchmarks,
+
+
+rule retrieve_generator:
+    output:
+        directory("data/generator"),
+    params:
+        url=config["generator"]["url"],
+        commit=config["generator"]["commit"],
+    log:
+        "logs/retrieve_generator.log",
+    shell:
+        "(git clone --quiet {params.url} {output} && "
+        "git -C {output} checkout --quiet {params.commit}) > {log} 2>&1"
+
+
+rule build_network:
+    input:
+        generator="data/generator",
+    output:
+        network="resources/networks/resilient_{case}.nc",
+    params:
+        case=lambda w: CASES[w.case],
+    log:
+        python="results/logs/build_network/resilient_{case}_python.log",
+    benchmark:
+        "results/benchmarks/build_network/resilient_{case}"
+    threads: 1
+    message:
+        "Building the stochastic network of the case {wildcards.case}"
+    script:
+        "scripts/build_network.py"
+
+
+rule solve_network:
+    input:
+        network="resources/networks/resilient_{case}.nc",
+    output:
+        network="results/networks/resilient_{case}_{solver}.nc",
+    params:
+        solver=lambda w: SOLVERS[w.solver],
+        case=lambda w: CASES[w.case],
+        smspp_benchmark="results/benchmarks/solve_network/"
+        "resilient_{case}_{solver}.smspp",
+        workdir="results/smspp/resilient_{case}_{solver}",
+    log:
+        python="results/logs/solve_network/resilient_{case}_{solver}_python.log",
+        solver="results/logs/solve_network/resilient_{case}_{solver}_solver.log",
+    benchmark:
+        "results/benchmarks/solve_network/resilient_{case}_{solver}"
+    threads: lambda w: SOLVERS[w.solver].get("threads", 1)
+    message:
+        "Solving the case {wildcards.case} with {wildcards.solver}"
+    script:
+        "scripts/solve_network.py"
+
+
+rule solve_all:
+    input:
+        expand(
+            "results/networks/resilient_{case}_{solver}.nc",
+            case=CASES,
+            solver=SOLVERS,
+        ),
+
+
+rule collect_benchmarks:
+    output:
+        "results/solve_benchmarks.csv",
+    shell:
+        "python scripts/collect_solve_benchmarks.py --prefix . "
+        "--results-root results --output {output}"
