@@ -1,14 +1,3 @@
-# The stochastic instances of the generator of plan4res/resilient: a network
-# of the European power system in 2030 for each case of config["cases"],
-# solved by each solver of config["solvers"] with PyPSA or with SMS++ through
-# pypsa2smspp. The results, the benchmarks of Snakemake and the logs have the
-# names and the format of those of pypsa-eur-instances, so that the same
-# scripts read both.
-#
-#   snakemake -c 32 solve_all
-#   snakemake -c 1 collect_benchmarks
-
-
 configfile: "config.yaml"
 
 
@@ -27,22 +16,9 @@ localrules:
     collect_benchmarks,
 
 
-rule retrieve_generator:
-    output:
-        directory("data/generator"),
-    params:
-        url=config["generator"]["url"],
-        commit=config["generator"]["commit"],
-    log:
-        "logs/retrieve_generator.log",
-    shell:
-        "(git clone --quiet {params.url} {output} && "
-        "git -C {output} checkout --quiet {params.commit}) > {log} 2>&1"
-
-
 rule build_network:
     input:
-        generator="data/generator",
+        generator="resilient",
     output:
         network="resources/networks/resilient_{case}.nc",
     params:
@@ -66,12 +42,12 @@ rule solve_network:
     params:
         solver=lambda w: SOLVERS[w.solver],
         case=lambda w: CASES[w.case],
-        smspp_benchmark="results/benchmarks/solve_network/"
-        "resilient_{case}_{solver}.smspp",
         workdir="results/smspp/resilient_{case}_{solver}",
     log:
-        python="results/logs/solve_network/resilient_{case}_{solver}_python.log",
-        solver="results/logs/solve_network/resilient_{case}_{solver}_solver.log",
+        python="results/logs/solve_network/"
+        "resilient_{case}_{solver}_python.log",
+        solver="results/logs/solve_network/"
+        "resilient_{case}_{solver}_solver.log",
     benchmark:
         "results/benchmarks/solve_network/resilient_{case}_{solver}"
     threads: lambda w: SOLVERS[w.solver].get("threads", 1)

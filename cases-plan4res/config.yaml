@@ -1,81 +1,51 @@
-# The stochastic capacity expansion of the European power system in 2030
-# built by the generator of plan4res/resilient (ENVIS NECPEssentials, 16
-# regions, hourly steps, continuous investment), with scenarios of the demand
-# and of the availability of the renewables, solved by PyPSA with Gurobi and
-# by SMS++ (pypsa2smspp) on the TwoStageStochasticBlock, as one problem and by
-# the Benders decomposition.
-
-generator:
-  url: https://github.com/plan4res/resilient.git
-  commit: b2629d4458
-
-# each case: the horizon (begin, end and possibly the days kept, dd/mm/yyyy),
-# the number of scenarios (the first ones of the generator, all equally
-# likely), whether the generators are extendable and the thermal ones
-# committable, what the scenarios change, and possibly the options that the
-# solvers smspp take for it (smspp)
+# the cases: horizon, days kept per month (all if absent), number of
+# scenarios (the first ones of the generator, equally likely), extendable
+# generators, committable thermal generators, data the scenarios change, and
+# the arguments that the smspp solvers add for the case (smspp)
 cases:
-  w1_s21:
-    begin: 02/07/2030
-    end: 08/07/2030
+  # the first day of each month, 288 hours, each weighing 365/12
+  d12_s21:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 1
     scenarios: 21
     extendable: true
     committable: false
     stochastic: [demand, renewables]
-  w1_s52:
-    begin: 02/07/2030
-    end: 08/07/2030
+  d12_s52:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 1
     scenarios: 52
     extendable: true
     committable: false
     stochastic: [demand, renewables]
-  w1_s105:
-    begin: 02/07/2030
-    end: 08/07/2030
-    scenarios: 105
-    extendable: true
-    committable: false
-    stochastic: [demand, renewables]
-  w2_s21:
-    begin: 02/07/2030
-    end: 15/07/2030
-    scenarios: 21
-    extendable: true
-    committable: false
-    stochastic: [demand, renewables]
-  w2_s105:
-    begin: 02/07/2030
-    end: 15/07/2030
-    scenarios: 105
-    extendable: true
-    committable: false
-    stochastic: [demand, renewables]
-  w4_s21:
-    begin: 02/07/2030
-    end: 29/07/2030
-    scenarios: 21
-    extendable: true
-    committable: false
-    stochastic: [demand, renewables]
-  w4_s105:
-    begin: 02/07/2030
-    end: 29/07/2030
-    scenarios: 105
-    extendable: true
-    committable: false
-    stochastic: [demand, renewables]
-  # the first day of each month of 2030, each hour weighing 365/12 hours
-  y1d12_s21:
+  d12_s105:
     begin: 01/01/2030
     end: 31/12/2030
-    days: [01/01/2030, 01/02/2030, 01/03/2030, 01/04/2030, 01/05/2030,
-           01/06/2030, 01/07/2030, 01/08/2030, 01/09/2030, 01/10/2030,
-           01/11/2030, 01/12/2030]
+    days_per_month: 1
+    scenarios: 105
+    extendable: true
+    committable: false
+    stochastic: [demand, renewables]
+  # the 1st and the 16th of each month, 576 hours, each weighing 365/24
+  d24_s21:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 2
     scenarios: 21
     extendable: true
     committable: false
     stochastic: [demand, renewables]
-  # the whole of 2030, 8760 hours
+  d24_s105:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 2
+    scenarios: 105
+    extendable: true
+    committable: false
+    stochastic: [demand, renewables]
+  # the whole year, 8760 hours
   y1_s21:
     begin: 01/01/2030
     end: 31/12/2030
@@ -83,12 +53,12 @@ cases:
     extendable: true
     committable: false
     stochastic: [demand, renewables]
-  # w1_s21 with the unit commitment of the thermal generators, which are
-  # not extendable, and which SMS++ writes as thermal units only with
-  # enable_thermal_units (smspp is added to the options of the smspp solvers)
-  w1_s21_uc:
-    begin: 02/07/2030
-    end: 08/07/2030
+  # d12_s21 with unit commitment: without enable_thermal_units, SMS++ writes
+  # all the generators as intermittent ones
+  d12_s21_uc:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 1
     scenarios: 21
     extendable: true
     committable: true
@@ -96,15 +66,13 @@ cases:
     smspp:
       enable_thermal_units: true
 
-# the run-of-river generators of the generator have the carrier hydro, and are
-# among the intermittent ones of SMS++, whose availability comes in scenarios
-# as that of wind and solar does
+# with enable_thermal_units, the run-of-river generators (carrier hydro) are
+# intermittent, their availability coming in scenarios
 intermittent: &intermittent [solar, solar-hsat, onwind, offwind-ac, offwind-dc,
                              offwind-float, PV, wind, ror, hydro]
 
-# each solver: name (a solver of PyPSA, or smspp), the threads of the rule,
-# and the solver options (for smspp, the arguments of the Transformation of
-# pypsa2smspp, whose configfile is a template of pySMSpp)
+# the solvers: a solver of PyPSA, or smspp with the arguments of the
+# Transformation of pypsa2smspp (configfile being a template of pySMSpp)
 solvers:
   gurobi:
     name: gurobi

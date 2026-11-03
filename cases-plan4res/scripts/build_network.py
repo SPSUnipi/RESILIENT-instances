@@ -1,23 +1,26 @@
 """
-Build a stochastic electricity network with the generator of plan4res/resilient.
+Build a stochastic electricity network with the generator of
+plan4res/resilient.
 
-The generator is the notebook ``CreateElecNetwork.ipynb`` of the repository
-retrieved by ``retrieve_generator``: a network of the European power
-system in 2030 (ENVIS NECPEssentials), whose demand, renewable availability and
-inflows come in scenarios. The code cells of the notebook that build the
-deterministic network are run as they are, with the settings of the case written
-into a settings file of their own, and the network is then made stochastic with
-the first ``scenarios`` scenarios of the generator, all equally likely, on the
-data that ``stochastic`` lists: the demand, the availability of the renewable
-generators, or both.
+The generator is the notebook ``CreateElecNetwork.ipynb`` of the submodule
+``resilient``: a network of the European power system in 2030 (ENVIS
+NECPEssentials), whose demand, renewable availability and inflows come in
+scenarios. The code cells of the notebook that build the deterministic network
+are run as they are, with the settings of the case written into a settings file
+of their own, and the network is then made stochastic with the first
+``scenarios`` scenarios of the generator, all equally likely, on the data that
+``stochastic`` lists: the demand, the availability of the renewable generators,
+or both.
 
-With ``days`` only those days of the horizon are kept, e.g., the first day of
-each month of a year, which the generator cannot build by itself since it takes
-a continuous interval: the whole horizon is built, the hours of the other days
-are dropped, and each hour kept weighs as many hours as the horizon has days
-over the days kept, so that the operating costs stay on the scale of the yearly
-investment costs. The days kept follow one another, so that a storage passes
-from the end of a day to the beginning of the next one kept.
+With ``days_per_month`` only some days of each month of the horizon are kept,
+evenly spaced (the 1st with 1, the 1st and the 16th with 2), which the
+generator cannot build by itself since it takes a continuous interval: the
+whole horizon is built, the hours of the other days are dropped, and the costs
+and the energy of the generators in each hour kept weigh as many hours as the
+horizon has days over the days kept, so that the operating costs stay on the
+scale of the yearly investment costs. The storages go on hour by hour from a
+day kept to the next one, so that a storage passes from the end of a day to the
+beginning of the next one kept.
 
 The inflows of the hydro reservoirs stay those of the deterministic network:
 the SMS++ conversion of a stochastic network has no stochastic inflows, and the
@@ -36,7 +39,7 @@ Relevant settings
         extendable:   # capacity expansion of the generators
         committable:  # unit commitment of the thermal generators
         stochastic:   # what the scenarios change: [demand, renewables]
-        days:         # optional, the days of the horizon kept, dd/mm/yyyy
+        days_per_month:  # optional, 1 or 2 days kept per month
 
 Outputs
 -------
@@ -148,21 +151,21 @@ if __name__ == "__main__":
                 p_set.loc[:, (sc, f"Load_{b}")] = g["DemandScenarios"][b][sc]
         n.c.loads.dynamic.p_set = p_set
 
-    if case.get("days"):
-        kept = pd.to_datetime(case["days"], dayfirst=True)
+    if case.get("days_per_month"):
+        first = {1: [1], 2: [1, 16]}[int(case["days_per_month"])]
         day = n.snapshots.normalize()
-        missing = kept.difference(day.unique())
-        if not missing.empty:
-            raise ValueError(
-                f"days {[d.strftime('%d/%m/%Y') for d in missing]} are not in "
-                f"the horizon {case['begin']} - {case['end']}"
-            )
-        weight = day.unique().size / kept.unique().size
+        kept = day.unique()[day.unique().day.isin(first)]
+        weight = day.unique().size / kept.size
         n.set_snapshots(n.snapshots[day.isin(kept)])
-        n.snapshot_weightings.loc[:, :] = n.snapshot_weightings * weight
+        # the costs and the energy of the generators stand for the days that
+        # are dropped, the storages go on hour by hour (weighting them too
+        # would multiply their inflows and leave the network infeasible)
+        for column in ["objective", "generators"]:
+            n.snapshot_weightings[column] *= weight
 
     os.makedirs(os.path.dirname(output), exist_ok=True)
     n.export_to_netcdf(output)
     logger.info(
-        f"Written {output}: {len(n.snapshots)} snapshots, {len(scenarios)} scenarios"
+        f"Written {output}: {len(n.snapshots)} snapshots, "
+        f"{len(scenarios)} scenarios"
     )

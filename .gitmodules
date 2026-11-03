@@ -1,3 +1,7 @@
 [submodule "cases-pypsa-eur/pypsa-eur-instances"]
 	path = cases-pypsa-eur/pypsa-eur-instances
 	url = https://github.com/SPSUnipi/pypsa-eur-instances
+[submodule "cases-plan4res/resilient"]
+	path = cases-plan4res/resilient
+	url = https://github.com/plan4res/resilient.git
+	ignore = untracked
