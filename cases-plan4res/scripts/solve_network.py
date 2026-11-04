@@ -49,6 +49,10 @@ if __name__ == "__main__":
                                        log_fn=snakemake.log.solver)
     logger.info(f"Solving status '{status}' with termination condition "
                 f"'{condition}'")
+    # a network that is not solved is not written
+    if status != "ok":
+        raise RuntimeError(f"Solving status '{status}' with termination "
+                           f"condition '{condition}'.")
 
     n.meta = {
         "wildcards": dict(snakemake.wildcards),
