@@ -43,14 +43,16 @@ def main():
          f"(objective - {args.reference}) / {args.reference}"),
     ]:
         fig, ax = plt.subplots(figsize=(7, 4.5), constrained_layout=True)
-        # one marker per solver, since two solvers may give the same values
-        for (solver, subset), marker in zip(data.groupby("solver", sort=False),
-                                            "osD^vP*X"):
+        # a colour and a marker per solver, the same in both figures, the
+        # marker since two solvers may give the same values
+        for (solver, subset), colour, marker in zip(
+            data.groupby("solver", sort=False), plt.cm.tab10.colors, "osD^vP*X"
+        ):
             if column == "error" and solver == args.reference:
                 continue
             subset = subset.sort_values("scenarios")
-            ax.plot(subset.scenarios, subset[column], marker=marker,
-                    markersize=8, linewidth=2, label=solver)
+            ax.plot(subset.scenarios, subset[column], color=colour,
+                    marker=marker, markersize=8, linewidth=2, label=solver)
         if column == "s":
             ax.set_yscale("log")
         else:
