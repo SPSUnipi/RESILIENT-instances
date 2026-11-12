@@ -1,15 +1,16 @@
-This folder compares SMS++ with PyPSA on the stochastic instances of the
-generator of plan4res ([plan4res/resilient](https://github.com/plan4res/resilient),
-the submodule `resilient`), i.e., the capacity expansion of the European power
-system in 2030 over 16 regions, with up to 105 scenarios of the demand and of
-the availability of the renewables. The workflow uses PyPSA, pypsa2smspp and
-pySMSpp only, and its results have the format of those of pypsa-eur-instances,
-whose scripts read them as they are.
+This folder compares SMS++ with PyPSA on stochastic instances built from the
+Man0euVRE dataset by its generator
+([plan4res/resilient](https://github.com/plan4res/resilient), the submodule
+`resilient`), i.e., the capacity expansion of the European power system in 2030
+over 16 regions, with up to 105 scenarios of the demand and of the availability
+of the renewables, whose time series come from the crossEU project. The
+workflow uses PyPSA, pypsa2smspp and pySMSpp only, and its results have the
+format of those of pypsa-eur-instances, whose scripts read them as they are.
 
 ```bash
-git submodule update --init cases-plan4res/resilient
-conda env create -f envs/environment.yaml && conda activate plan4res-smspp
-snakemake -c 32 solve_all && snakemake -c 1 collect_benchmarks
+git submodule update --init cases-man0euvre/resilient
+conda env create -f envs/environment.yaml && conda activate man0euvre-smspp
+snakemake -c 32 solve_all && snakemake -c 1 plot_benchmarks
 ```
 
 SMS++ is installed separately (see the

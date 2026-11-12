@@ -14,6 +14,7 @@ wildcard_constraints:
 localrules:
     solve_all,
     collect_benchmarks,
+    plot_benchmarks,
 
 
 rule build_network:
@@ -72,3 +73,14 @@ rule collect_benchmarks:
     shell:
         "python scripts/collect_solve_benchmarks.py --prefix . "
         "--results-root results --output {output}"
+
+
+rule plot_benchmarks:
+    input:
+        "results/solve_benchmarks.csv",
+    output:
+        "results/plots/time.png",
+        "results/plots/objective_error.png",
+    shell:
+        "python scripts/plot_benchmarks.py {input} "
+        "--output-dir results/plots"

@@ -1,5 +1,5 @@
 """
-Build a stochastic electricity network with the generator of
+Build a stochastic electricity network with the generator of Man0euVRE,
 plan4res/resilient.
 
 The generator is the notebook ``CreateElecNetwork.ipynb`` of the submodule

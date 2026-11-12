@@ -1,14 +1,14 @@
 # The environment of the workflow: PyPSA, pypsa2smspp and pySMSpp, the
-# dependencies of the generator of plan4res/resilient, Snakemake and the
-# Python interface of Gurobi. SMS++ itself (whose tools pySMSpp runs) is
-# installed by one of the channels of
+# dependencies of the generator of Man0euVRE (plan4res/resilient), Snakemake
+# and the Python interface of Gurobi. SMS++ itself (whose tools pySMSpp runs)
+# is installed by one of the channels of
 # https://gitlab.com/smspp/smspp-project/-/wikis/Installing-SMS++
 # (the package smspp-project of conda-forge among them).
 #
 #   conda env create -f envs/environment.yaml
-#   conda activate plan4res-smspp
+#   conda activate man0euvre-smspp
 
-name: plan4res-smspp
+name: man0euvre-smspp
 channels:
   - conda-forge
   - gurobi

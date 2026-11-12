@@ -1,6 +1,6 @@
 """
-Solve a stochastic network of the generator of plan4res/resilient with the
-solver ``wildcards.solver`` of ``config.yaml``: with PyPSA if its ``name`` is a
+Solve a stochastic network of the generator of Man0euVRE with the solver
+``wildcards.solver`` of ``config.yaml``: with PyPSA if its ``name`` is a
 solver of PyPSA, with SMS++ through pypsa2smspp if it is ``smspp`` (the
 ``options`` being the arguments of its ``Transformation``). The solved network
 is written with the solver and its options in its metadata, as the networks of
