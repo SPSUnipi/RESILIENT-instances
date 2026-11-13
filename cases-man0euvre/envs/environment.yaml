@@ -14,7 +14,6 @@ channels:
   - gurobi
 dependencies:
   - python>=3.11
-  - pypsa>=1.2
   - geopandas
   - netcdf4
   - pyyaml
@@ -22,6 +21,9 @@ dependencies:
   - gurobi
   - pip
   - pip:
+      # PyPSA 1.4 for the Unit Commitment with scenarios, and pypsa2smspp
+      # with pandas 3, which PyPSA 1.4 requires
+      - pypsa @ git+https://github.com/davide-f/PyPSA.git@smspp_optimize_140
       # pySMSpp also gives the templates of the configurations of SMS++
-      - pysmspp @ git+https://github.com/SPSUnipi/pySMSpp.git@e474d459489bee64ba8a7461b49095ee28befb09
-      - pypsa2smspp @ git+https://github.com/SPSUnipi/pypsa2smspp.git@f759f8044982e4f6c4bff2f3e1675e54e9e3ae23
+      - pysmspp @ git+https://github.com/SPSUnipi/pySMSpp.git@bb4f460a61d07982815f0f6c6c9ec1c624be7187
+      - pypsa2smspp @ git+https://github.com/SPSUnipi/pypsa2smspp.git@enable_pandas3
