@@ -1,0 +1,86 @@
+configfile: "config.yaml"
+
+
+CASES = config["cases"]
+SOLVERS = config["solvers"]
+
+
+# a case may have underscores in its name, a solver may not
+wildcard_constraints:
+    case="[A-Za-z0-9_]+",
+    solver="[A-Za-z0-9-]+",
+
+
+localrules:
+    solve_all,
+    collect_benchmarks,
+    plot_benchmarks,
+
+
+rule build_network:
+    input:
+        generator="resilient",
+    output:
+        network="resources/networks/resilient_{case}.nc",
+    params:
+        case=lambda w: CASES[w.case],
+    log:
+        python="results/logs/build_network/resilient_{case}_python.log",
+    benchmark:
+        "results/benchmarks/build_network/resilient_{case}"
+    threads: 1
+    message:
+        "Building the stochastic network of the case {wildcards.case}"
+    script:
+        "scripts/build_network.py"
+
+
+rule solve_network:
+    input:
+        network="resources/networks/resilient_{case}.nc",
+    output:
+        network="results/networks/resilient_{case}_{solver}.nc",
+    params:
+        solver=lambda w: SOLVERS[w.solver],
+        case=lambda w: CASES[w.case],
+        workdir="results/smspp/resilient_{case}_{solver}",
+    log:
+        python="results/logs/solve_network/"
+        "resilient_{case}_{solver}_python.log",
+        solver="results/logs/solve_network/"
+        "resilient_{case}_{solver}_solver.log",
+    benchmark:
+        "results/benchmarks/solve_network/resilient_{case}_{solver}"
+    threads: lambda w: SOLVERS[w.solver].get("threads", 1)
+    message:
+        "Solving the case {wildcards.case} with {wildcards.solver}"
+    script:
+        "scripts/solve_network.py"
+
+
+rule solve_all:
+    input:
+        expand(
+            "results/networks/resilient_{case}_{solver}.nc",
+            case=CASES,
+            solver=SOLVERS,
+        ),
+
+
+rule collect_benchmarks:
+    output:
+        "results/solve_benchmarks.csv",
+    shell:
+        "python scripts/collect_solve_benchmarks.py --prefix . "
+        "--results-root results --output {output}"
+
+
+rule plot_benchmarks:
+    input:
+        "results/solve_benchmarks.csv",
+    output:
+        "results/plots/time.png",
+        "results/plots/objective_error.png",
+    shell:
+        "python scripts/plot_benchmarks.py {input} "
+        "--output-dir results/plots"

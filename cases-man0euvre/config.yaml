@@ -1,0 +1,109 @@
+# the cases: horizon, days kept per month (all if absent), number of
+# scenarios (the first ones of the generator, equally likely), extendable
+# generators, committable thermal generators, data the scenarios change, and
+# the arguments that the smspp solvers add for the case (smspp)
+cases:
+  # the first day of each month, 288 hours, each weighing 365/12
+  d12_s21:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 1
+    scenarios: 21
+    extendable: true
+    committable: false
+    stochastic: [demand, renewables]
+  d12_s52:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 1
+    scenarios: 52
+    extendable: true
+    committable: false
+    stochastic: [demand, renewables]
+  d12_s105:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 1
+    scenarios: 105
+    extendable: true
+    committable: false
+    stochastic: [demand, renewables]
+  # the 1st and the 16th of each month, 576 hours, each weighing 365/24
+  d24_s21:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 2
+    scenarios: 21
+    extendable: true
+    committable: false
+    stochastic: [demand, renewables]
+  d24_s105:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 2
+    scenarios: 105
+    extendable: true
+    committable: false
+    stochastic: [demand, renewables]
+  # the whole year, 8760 hours
+  y1_s21:
+    begin: 01/01/2030
+    end: 31/12/2030
+    scenarios: 21
+    extendable: true
+    committable: false
+    stochastic: [demand, renewables]
+  # d12_s21 with unit commitment: without enable_thermal_units, SMS++ writes
+  # all the generators as intermittent ones
+  d12_s21_uc:
+    begin: 01/01/2030
+    end: 31/12/2030
+    days_per_month: 1
+    scenarios: 21
+    extendable: true
+    committable: true
+    stochastic: [demand, renewables]
+    smspp:
+      enable_thermal_units: true
+
+# with enable_thermal_units, the run-of-river generators (carrier hydro) are
+# intermittent, their availability coming in scenarios
+intermittent: &intermittent [solar, solar-hsat, onwind, offwind-ac, offwind-dc,
+                             offwind-float, PV, wind, ror, hydro]
+
+# the solvers: a solver of PyPSA, or smspp with the arguments of the
+# Transformation of pypsa2smspp (configfile being a template of pySMSpp)
+solvers:
+  gurobi:
+    name: gurobi
+    threads: 32
+    options:
+      threads: 32
+      method: 2
+      crossover: 0
+      BarConvTol: 1.0e-05
+      Seed: 123
+      TimeLimit: 43200
+  smspp-tssb:
+    name: smspp
+    threads: 32
+    options:
+      capacity_expansion_ucblock: true
+      configfile: TSSBlock/TSSBSCfg_grb.txt
+      intermittent_carriers: *intermittent
+      stochastic_parameters:
+        stochastic_type: tssb
+        parameters: [demand, renewable_maxpower]
+  smspp-tssb-bds:
+    name: smspp
+    threads: 32
+    options:
+      capacity_expansion_ucblock: true
+      configfile: TSSBlock/TSSBSCfg-BDS.txt
+      intermittent_carriers: *intermittent
+      stochastic_parameters:
+        stochastic_type: tssb
+        parameters: [demand, renewable_maxpower]
+      pysmspp_options:
+        k: null
+        v2: null
