@@ -25,5 +25,5 @@ dependencies:
       # with pandas 3, which PyPSA 1.4 requires
       - pypsa @ git+https://github.com/davide-f/PyPSA.git@smspp_optimize_140
       # pySMSpp also gives the templates of the configurations of SMS++
-      - pysmspp @ git+https://github.com/SPSUnipi/pySMSpp.git@bb4f460a61d07982815f0f6c6c9ec1c624be7187
+      - pysmspp @ git+https://github.com/SPSUnipi/pySMSpp.git@d0e5c32ec6e103571e2741479dd3432c399d7887
       - pypsa2smspp @ git+https://github.com/SPSUnipi/pypsa2smspp.git@enable_pandas3

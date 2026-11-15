@@ -124,3 +124,34 @@ solvers:
       pysmspp_options:
         k: null
         v2: null
+  # the same with HiGHS in master and subproblems, no commercial solver
+  smspp-tssb-bds-highs:
+    name: smspp
+    threads: 32
+    options:
+      capacity_expansion_ucblock: true
+      configfile: TSSBlock/TSSBSCfg-BDS-HiGHS.txt
+      intermittent_carriers: *intermittent
+      stochastic_parameters:
+        stochastic_type: tssb
+        parameters: [demand, renewable_maxpower]
+      pysmspp_options:
+        k: null
+        v2: null
+  # for the cases with unit commitment: the continuous relaxations of the
+  # scenarios give the bound, each scenario a MILP at the design of the
+  # master the solution, which is kept with its gap (accept_feasible)
+  smspp-tssb-bds-highs-uc:
+    name: smspp
+    threads: 32
+    accept_feasible: true
+    options:
+      capacity_expansion_ucblock: true
+      configfile: TSSBlock/TSSBSCfg-BDS-HiGHS-UC.txt
+      intermittent_carriers: *intermittent
+      stochastic_parameters:
+        stochastic_type: tssb
+        parameters: [demand, renewable_maxpower]
+      pysmspp_options:
+        k: null
+        v2: null
