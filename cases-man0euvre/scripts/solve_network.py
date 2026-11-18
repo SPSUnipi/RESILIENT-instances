@@ -16,7 +16,11 @@ import pypsa
 logger = logging.getLogger(__name__)
 
 
-def solve_smspp(n, options, workdir, name):
+# kLowPrecision of SMS++: a solution found, but not proved optimal
+LOW_PRECISION = 20
+
+
+def solve_smspp(n, options, workdir, name, accept_feasible=False):
     import pypsa2smspp
 
     Path(workdir).mkdir(parents=True, exist_ok=True)
@@ -24,10 +28,12 @@ def solve_smspp(n, options, workdir, name):
                                                 name=name)
     transformation.create_model(n)
     result = transformation.optimize()
-    if not result.is_optimal:
-        return "warning", str(result.status)
+    bounds = {"lower": result.lower_bound, "upper": result.upper_bound}
+    feasible = accept_feasible and result.status_code == LOW_PRECISION
+    if not (result.is_optimal or feasible):
+        return "warning", str(result.status), bounds
     transformation.retrieve_solution(n)
-    return "ok", str(result.status)
+    return "ok", str(result.status), bounds
 
 
 if __name__ == "__main__":
@@ -41,9 +47,12 @@ if __name__ == "__main__":
         # the case may add arguments of the Transformation, e.g.,
         # enable_thermal_units where the thermal generators are committable
         options.update(snakemake.params.case.get("smspp") or {})
-        status, condition = solve_smspp(n, options, snakemake.params.workdir,
-                                        Path(snakemake.output.network).stem)
+        status, condition, bounds = solve_smspp(
+            n, options, snakemake.params.workdir,
+            Path(snakemake.output.network).stem,
+            solver.get("accept_feasible", False))
     else:
+        bounds = None
         status, condition = n.optimize(solver_name=solver["name"],
                                        solver_options=options,
                                        log_fn=snakemake.log.solver)
@@ -60,6 +69,7 @@ if __name__ == "__main__":
             "solver": {"name": solver["name"],
                        "options": snakemake.wildcards.solver},
             "solver_options": {snakemake.wildcards.solver: options},
+            "bounds": bounds,
         },
     }
     n.export_to_netcdf(snakemake.output.network)
